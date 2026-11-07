@@ -19,8 +19,8 @@ Markdown printed to the terminal:
 2. **Summary** — 3 sentences + top 3 risks (AI-generated, Day 6)
 3. **Shipped** — PRs merged in the window
 4. **In progress** — open PRs updated in the last 3 days
-5. **Stuck** — open PRs with no update for 7+ days, or failing checks
-6. **Risks** — issues labelled `bug` or `regression` opened in the window
+5. **Stuck** — open PRs with no update for 7+ days, or failing checks; top 15 shown, plus the total count
+6. **Risks** — issues still open whose label name contains `bug` or `regression` (case-insensitive), opened in the window
 7. Footer — item counts per section; API cost of the run
 
 Each item: title, author, age, link to the PR or issue.
@@ -44,3 +44,11 @@ Private repos · multiple repos per run · lines changed · SonarQube or other e
 - Removed Sprint/Epic/Story from output: those are Jira concepts; a public GitHub repo has none.
 - All bots excluded, not just dependabot: bot PRs add noise without decisions.
 - Open PRs are fetched in full, ignoring `--days`; only merged PRs and issues use the window, otherwise Stuck would always be empty.
+- A PR with failing checks goes in Stuck, however recently it was updated; Stuck takes priority over In progress.
+- Open PRs without failing checks, last updated at least 3 but under 7 days ago, are left out: they fit no bucket.
+- Draft PRs are left out of every section.
+- Stuck shows the top 15 items plus the total count.
+- Pending checks don't count as failing.
+- Issues already closed are left out of Risks.
+- No retries: a failed GitHub call stops the run with a clear message and a non-zero exit.
+- Risk = issue whose label name contains `bug` or `regression`, case-insensitive: an exact match would miss react's `Type: Bug`.
