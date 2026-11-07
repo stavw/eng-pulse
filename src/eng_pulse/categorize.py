@@ -7,6 +7,7 @@ from eng_pulse.github import PullRequest
 
 _FAILING_CHECK_STATES = {"FAILURE", "ERROR"}
 _IN_PROGRESS_WINDOW = timedelta(days=3)
+_STUCK_AFTER = timedelta(days=7)
 
 
 def _is_eligible(pr: PullRequest) -> bool:
@@ -37,4 +38,14 @@ def in_progress(open_prs: list[PullRequest], now: datetime) -> list[PullRequest]
         if _is_eligible(pr)
         and not _has_failing_checks(pr)
         and now - pr.updated_at < _IN_PROGRESS_WINDOW
+    ]
+
+
+def stuck(open_prs: list[PullRequest], now: datetime) -> list[PullRequest]:
+    """Open PRs with no update for 7+ days or failing checks, in the order given."""
+    return [
+        pr
+        for pr in open_prs
+        if _is_eligible(pr)
+        and (_has_failing_checks(pr) or now - pr.updated_at >= _STUCK_AFTER)
     ]
