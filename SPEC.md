@@ -43,3 +43,4 @@ Private repos · multiple repos per run · lines changed · SonarQube or other e
 - Bucket rules taken from the Day 5 plan; tune after seeing real output on Day 8.
 - Removed Sprint/Epic/Story from output: those are Jira concepts; a public GitHub repo has none.
 - All bots excluded, not just dependabot: bot PRs add noise without decisions.
+- Open PRs are fetched in full, ignoring `--days`; only merged PRs and issues use the window, otherwise Stuck would always be empty.

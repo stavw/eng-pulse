@@ -1,0 +1,29 @@
+{
+  "data": {
+    "repository": {
+      "items": {
+        "pageInfo": { "hasNextPage": true, "endCursor": "issues-cursor-1" },
+        "nodes": [
+          {
+            "number": 301,
+            "title": "Crash on startup",
+            "url": "https://github.com/acme/widgets/issues/301",
+            "createdAt": "2026-01-14T09:00:00Z",
+            "updatedAt": "2026-01-14T10:00:00Z",
+            "author": { "login": "dave", "__typename": "User" },
+            "labels": { "nodes": [{ "name": "Type: Bug" }] }
+          },
+          {
+            "number": 302,
+            "title": "Filed one second before the window",
+            "url": "https://github.com/acme/widgets/issues/302",
+            "createdAt": "2026-01-08T11:59:59Z",
+            "updatedAt": "2026-01-14T10:00:00Z",
+            "author": { "login": "erin", "__typename": "User" },
+            "labels": { "nodes": [{ "name": "bug" }] }
+          }
+        ]
+      }
+    }
+  }
+}

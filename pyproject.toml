@@ -1,0 +1,18 @@
+[project]
+name = "eng-pulse"
+version = "0.1.0"
+description = "Weekly engineering pulse for a GitHub repo"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+eng-pulse = "eng_pulse.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]

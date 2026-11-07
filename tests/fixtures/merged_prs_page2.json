@@ -1,0 +1,35 @@
+{
+  "data": {
+    "repository": {
+      "items": {
+        "pageInfo": { "hasNextPage": true, "endCursor": "merged-cursor-2" },
+        "nodes": [
+          {
+            "number": 203,
+            "title": "Merged exactly at the window start",
+            "url": "https://github.com/acme/widgets/pull/203",
+            "createdAt": "2026-01-05T09:00:00Z",
+            "updatedAt": "2026-01-08T12:00:00Z",
+            "author": { "login": "bob", "__typename": "User" },
+            "labels": { "nodes": [] },
+            "isDraft": false,
+            "mergedAt": "2026-01-08T12:00:00Z",
+            "commits": { "nodes": [] }
+          },
+          {
+            "number": 204,
+            "title": "Merged before the window",
+            "url": "https://github.com/acme/widgets/pull/204",
+            "createdAt": "2025-12-20T09:00:00Z",
+            "updatedAt": "2026-01-01T12:00:00Z",
+            "author": { "login": "bob", "__typename": "User" },
+            "labels": { "nodes": [] },
+            "isDraft": false,
+            "mergedAt": "2026-01-01T12:00:00Z",
+            "commits": { "nodes": [] }
+          }
+        ]
+      }
+    }
+  }
+}
