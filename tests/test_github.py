@@ -83,6 +83,15 @@ def test_issues_filter_on_created_time_and_stop_paging_at_the_window(gh):
     assert [issue.number for issue in issues] == [301]
 
 
+def test_issues_query_asks_only_for_open_issues(gh):
+    gh.queue_fixture("issues_page1")
+
+    fetch_issues(REPO, SINCE)
+
+    query = next(arg for arg in gh.calls[0] if arg.startswith("query="))
+    assert "states: OPEN" in query
+
+
 def test_pull_request_fields_are_mapped(gh):
     gh.queue_fixture("open_prs_page1", "open_prs_page2")
 
