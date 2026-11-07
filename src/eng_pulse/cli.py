@@ -6,6 +6,8 @@ import sys
 from collections.abc import Sequence
 from datetime import UTC, datetime
 
+from eng_pulse.categorize import categorize
+from eng_pulse.formatting import format_digest
 from eng_pulse.github import GitHubError, RepoNotFoundError, fetch_repo_data
 
 # Checked before any gh call: gh looks up a name with no slash under the logged-in account.
@@ -46,7 +48,5 @@ def main(argv: Sequence[str] | None = None) -> int:
     except GitHubError as error:
         print(f"error: could not fetch {args.repo} from GitHub: {error}", file=sys.stderr)
         return 1
-    print(f"open PRs: {len(data.open_prs)}")
-    print(f"merged PRs: {len(data.merged_prs)}")
-    print(f"issues: {len(data.issues)}")
+    print(format_digest(args.repo, args.days, categorize(data, args.days, now), now))
     return 0

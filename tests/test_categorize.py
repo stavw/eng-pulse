@@ -1,7 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
-from eng_pulse.categorize import in_progress, risks, shipped, stuck
-from eng_pulse.github import Issue, PullRequest
+from eng_pulse.categorize import categorize, in_progress, risks, shipped, stuck
+from eng_pulse.github import Issue, PullRequest, RepoData
 
 NOW = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
 
@@ -232,3 +232,32 @@ def test_risks_window_follows_days():
 
 def test_risks_excludes_bots():
     assert risks([_issue(author_is_bot=True)], days=7, now=NOW) == []
+
+
+def test_categorize_puts_each_item_in_its_bucket():
+    merged = _pr(1, merged_at=NOW - timedelta(days=1))
+    active = _pr(2, updated_at=NOW - timedelta(days=1))
+    quiet = _pr(3, updated_at=NOW - timedelta(days=8))
+    between = _pr(4, updated_at=NOW - timedelta(days=5))
+    issue = _issue(5)
+    data = RepoData(open_prs=[active, quiet, between], merged_prs=[merged], issues=[issue])
+
+    buckets = categorize(data, days=7, now=NOW)
+
+    assert buckets.shipped == [merged]
+    assert buckets.in_progress == [active]
+    assert buckets.stuck == [quiet]
+    assert buckets.risks == [issue]
+
+
+def test_categorize_passes_days_and_now_through():
+    merged = _pr(1, merged_at=NOW - timedelta(days=2))
+    issue = _issue(2, created_at=NOW - timedelta(days=2))
+    pr = _pr(3, updated_at=NOW - timedelta(days=1))
+    data = RepoData(open_prs=[pr], merged_prs=[merged], issues=[issue])
+
+    narrow = categorize(data, days=1, now=NOW)
+    later = categorize(data, days=7, now=NOW + timedelta(days=30))
+
+    assert narrow.shipped == [] and narrow.risks == []
+    assert later.in_progress == [] and later.stuck == [pr]
