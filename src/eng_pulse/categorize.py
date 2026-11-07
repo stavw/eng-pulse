@@ -2,12 +2,13 @@
 
 from datetime import datetime, timedelta
 
-from eng_pulse.github import PullRequest
+from eng_pulse.github import Issue, PullRequest
 
 
 _FAILING_CHECK_STATES = {"FAILURE", "ERROR"}
 _IN_PROGRESS_WINDOW = timedelta(days=3)
 _STUCK_AFTER = timedelta(days=7)
+_RISK_LABEL_TERMS = ("bug", "regression")
 
 
 def _is_eligible(pr: PullRequest) -> bool:
@@ -48,4 +49,20 @@ def stuck(open_prs: list[PullRequest], now: datetime) -> list[PullRequest]:
         for pr in open_prs
         if _is_eligible(pr)
         and (_has_failing_checks(pr) or now - pr.updated_at >= _STUCK_AFTER)
+    ]
+
+
+def _has_risk_label(issue: Issue) -> bool:
+    return any(
+        term in label.lower() for label in issue.labels for term in _RISK_LABEL_TERMS
+    )
+
+
+def risks(open_issues: list[Issue], days: int, now: datetime) -> list[Issue]:
+    """Open issues opened in the window whose label name contains a risk term."""
+    since = now - timedelta(days=days)
+    return [
+        issue
+        for issue in open_issues
+        if not issue.author_is_bot and issue.created_at >= since and _has_risk_label(issue)
     ]

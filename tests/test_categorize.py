@@ -1,7 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
-from eng_pulse.categorize import in_progress, shipped, stuck
-from eng_pulse.github import PullRequest
+from eng_pulse.categorize import in_progress, risks, shipped, stuck
+from eng_pulse.github import Issue, PullRequest
 
 NOW = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
 
@@ -26,6 +26,24 @@ def _pr(
         merged_at=merged_at,
         is_draft=is_draft,
         check_state=check_state,
+    )
+
+
+def _issue(
+    number: int = 1,
+    created_at: datetime = NOW,
+    labels: tuple[str, ...] = ("bug",),
+    author_is_bot: bool = False,
+) -> Issue:
+    return Issue(
+        number=number,
+        title=f"Issue {number}",
+        url=f"https://github.com/acme/widgets/issues/{number}",
+        author="dependabot" if author_is_bot else "alice",
+        author_is_bot=author_is_bot,
+        created_at=created_at,
+        updated_at=created_at,
+        labels=labels,
     )
 
 
@@ -158,3 +176,51 @@ def test_stuck_returns_every_match_so_the_total_count_stays_available():
     prs = [_pr(n, check_state="FAILURE") for n in range(20)]
 
     assert stuck(prs, now=NOW) == prs
+
+
+def test_risks_match_any_label_containing_bug_or_regression_in_any_case():
+    names = ["bug", "Type: Bug", "BUG", "Regression", "perf-regression", "Type: Regression"]
+    issues = [_issue(n, labels=(name,)) for n, name in enumerate(names)]
+
+    assert risks(issues, days=7, now=NOW) == issues
+
+
+def test_risks_contains_match_also_catches_debug_labels():
+    issue = _issue(labels=("INTERNAL: Debug",))
+
+    assert risks([issue], days=7, now=NOW) == [issue]
+
+
+def test_risks_match_when_only_one_of_several_labels_qualifies():
+    issue = _issue(labels=("area-auth", "Type: Bug"))
+
+    assert risks([issue], days=7, now=NOW) == [issue]
+
+
+def test_risks_excludes_issue_without_a_matching_label():
+    issues = [_issue(1, labels=()), _issue(2, labels=("enhancement", "area-auth"))]
+
+    assert risks(issues, days=7, now=NOW) == []
+
+
+def test_risks_includes_issue_opened_exactly_at_the_window_start():
+    issue = _issue(created_at=NOW - timedelta(days=7))
+
+    assert risks([issue], days=7, now=NOW) == [issue]
+
+
+def test_risks_excludes_issue_opened_just_before_the_window():
+    issue = _issue(created_at=NOW - timedelta(days=7, seconds=1))
+
+    assert risks([issue], days=7, now=NOW) == []
+
+
+def test_risks_window_follows_days():
+    issue = _issue(created_at=NOW - timedelta(days=2))
+
+    assert risks([issue], days=1, now=NOW) == []
+    assert risks([issue], days=2, now=NOW) == [issue]
+
+
+def test_risks_excludes_bots():
+    assert risks([_issue(author_is_bot=True)], days=7, now=NOW) == []
