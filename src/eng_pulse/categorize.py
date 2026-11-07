@@ -1,14 +1,23 @@
 """Bucket rules from SPEC.md, as pure functions: no I/O, no clock. Callers pass `now`."""
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from eng_pulse.github import Issue, PullRequest
+from eng_pulse.github import Issue, PullRequest, RepoData
 
 
 _FAILING_CHECK_STATES = {"FAILURE", "ERROR"}
 _IN_PROGRESS_WINDOW = timedelta(days=3)
 _STUCK_AFTER = timedelta(days=7)
 _RISK_LABEL_TERMS = ("bug", "regression")
+
+
+@dataclass(frozen=True)
+class Buckets:
+    shipped: list[PullRequest]
+    in_progress: list[PullRequest]
+    stuck: list[PullRequest]
+    risks: list[Issue]
 
 
 def _is_eligible(pr: PullRequest) -> bool:
@@ -70,3 +79,12 @@ def risks(open_issues: list[Issue], days: int, now: datetime) -> list[Issue]:
         for issue in open_issues
         if not issue.author_is_bot and issue.created_at >= since and _has_risk_label(issue)
     ]
+
+
+def categorize(data: RepoData, days: int, now: datetime) -> Buckets:
+    return Buckets(
+        shipped=shipped(data.merged_prs, days, now),
+        in_progress=in_progress(data.open_prs, now),
+        stuck=stuck(data.open_prs, now),
+        risks=risks(data.issues, days, now),
+    )

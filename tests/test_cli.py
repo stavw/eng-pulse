@@ -63,14 +63,21 @@ def test_missing_gh_exits_non_zero(gh, capsys):
     assert "gh CLI is not installed" in capsys.readouterr().err
 
 
-def test_success_prints_counts_and_exits_zero(gh, capsys):
+def test_success_prints_the_digest_and_exits_zero(gh, capsys):
+    # main() reads the real clock, so both non-bot fixture PRs are long past the 7-day Stuck limit.
     gh.queue_fixture("open_prs_page1", "open_prs_page2")
     gh.queue_page([])
     gh.queue_page([])
 
     assert main(["acme/widgets", "--days", "1"]) == 0
 
-    assert capsys.readouterr().out.splitlines() == ["open PRs: 3", "merged PRs: 0", "issues: 0"]
+    captured = capsys.readouterr()
+    lines = captured.out.splitlines()
+    assert lines[0] == "# eng-pulse: acme/widgets"
+    assert lines[-1] == "Shipped: 0 · In progress: 0 · Stuck: 2 · Risks: 0"
+    assert "[#101 Add retry to client](https://github.com/acme/widgets/pull/101)" in captured.out
+    assert "#102" not in captured.out
+    assert captured.err == ""
 
 
 def test_days_defaults_to_seven_and_now_is_passed_in_as_utc(monkeypatch):
