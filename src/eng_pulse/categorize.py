@@ -43,13 +43,17 @@ def in_progress(open_prs: list[PullRequest], now: datetime) -> list[PullRequest]
 
 
 def stuck(open_prs: list[PullRequest], now: datetime) -> list[PullRequest]:
-    """Open PRs with no update for 7+ days or failing checks, in the order given."""
-    return [
+    """Open PRs with no update for 7+ days or failing checks, most recently updated first.
+
+    Returns every match. The top-15 limit is for display, which also needs the total.
+    """
+    matches = [
         pr
         for pr in open_prs
         if _is_eligible(pr)
         and (_has_failing_checks(pr) or now - pr.updated_at >= _STUCK_AFTER)
     ]
+    return sorted(matches, key=lambda pr: pr.updated_at, reverse=True)
 
 
 def _has_risk_label(issue: Issue) -> bool:

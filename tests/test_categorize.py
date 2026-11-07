@@ -178,6 +178,14 @@ def test_stuck_returns_every_match_so_the_total_count_stays_available():
     assert stuck(prs, now=NOW) == prs
 
 
+def test_stuck_sorts_most_recently_updated_first():
+    oldest = _pr(1, updated_at=NOW - timedelta(days=90))
+    newest = _pr(2, updated_at=NOW - timedelta(hours=1), check_state="FAILURE")
+    middle = _pr(3, updated_at=NOW - timedelta(days=8))
+
+    assert stuck([oldest, newest, middle], now=NOW) == [newest, middle, oldest]
+
+
 def test_risks_match_any_label_containing_bug_or_regression_in_any_case():
     names = ["bug", "Type: Bug", "BUG", "Regression", "perf-regression", "Type: Regression"]
     issues = [_issue(n, labels=(name,)) for n, name in enumerate(names)]
