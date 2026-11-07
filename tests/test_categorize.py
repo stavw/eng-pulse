@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from eng_pulse.categorize import shipped
+from eng_pulse.categorize import in_progress, shipped
 from eng_pulse.github import PullRequest
 
 NOW = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
@@ -68,3 +68,36 @@ def test_shipped_excludes_drafts():
     pr = _pr(merged_at=NOW - timedelta(days=1), is_draft=True)
 
     assert shipped([pr], days=7, now=NOW) == []
+
+
+def test_in_progress_includes_pr_updated_just_under_3_days_ago():
+    pr = _pr(updated_at=NOW - timedelta(days=3) + timedelta(seconds=1))
+
+    assert in_progress([pr], now=NOW) == [pr]
+
+
+def test_in_progress_excludes_pr_updated_exactly_3_days_ago():
+    assert in_progress([_pr(updated_at=NOW - timedelta(days=3))], now=NOW) == []
+
+
+def test_in_progress_excludes_pr_updated_over_3_days_ago():
+    assert in_progress([_pr(updated_at=NOW - timedelta(days=5))], now=NOW) == []
+
+
+def test_in_progress_excludes_recent_pr_with_failing_checks():
+    for state in ("FAILURE", "ERROR"):
+        assert in_progress([_pr(check_state=state)], now=NOW) == []
+
+
+def test_in_progress_includes_recent_pr_with_pending_or_missing_checks():
+    prs = [_pr(1, check_state="PENDING"), _pr(2, check_state="EXPECTED"), _pr(3, check_state=None)]
+
+    assert in_progress(prs, now=NOW) == prs
+
+
+def test_in_progress_excludes_bots():
+    assert in_progress([_pr(author_is_bot=True)], now=NOW) == []
+
+
+def test_in_progress_excludes_drafts():
+    assert in_progress([_pr(is_draft=True)], now=NOW) == []
