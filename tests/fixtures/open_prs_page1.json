@@ -1,0 +1,35 @@
+{
+  "data": {
+    "repository": {
+      "items": {
+        "pageInfo": { "hasNextPage": true, "endCursor": "open-cursor-1" },
+        "nodes": [
+          {
+            "number": 101,
+            "title": "Add retry to client",
+            "url": "https://github.com/acme/widgets/pull/101",
+            "createdAt": "2026-01-10T09:00:00Z",
+            "updatedAt": "2026-01-14T10:00:00Z",
+            "author": { "login": "alice", "__typename": "User" },
+            "labels": { "nodes": [{ "name": "enhancement" }, { "name": "area-client" }] },
+            "isDraft": false,
+            "mergedAt": null,
+            "commits": { "nodes": [{ "commit": { "statusCheckRollup": { "state": "SUCCESS" } } }] }
+          },
+          {
+            "number": 102,
+            "title": "Bump requests",
+            "url": "https://github.com/acme/widgets/pull/102",
+            "createdAt": "2026-01-12T09:00:00Z",
+            "updatedAt": "2026-01-13T10:00:00Z",
+            "author": { "login": "dependabot", "__typename": "Bot" },
+            "labels": { "nodes": [] },
+            "isDraft": true,
+            "mergedAt": null,
+            "commits": { "nodes": [{ "commit": { "statusCheckRollup": { "state": "FAILURE" } } }] }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "data": {
+    "repository": {
+      "items": {
+        "pageInfo": { "hasNextPage": false, "endCursor": "open-cursor-2" },
+        "nodes": [
+          {
+            "number": 50,
+            "title": "Abandoned refactor",
+            "url": "https://github.com/acme/widgets/pull/50",
+            "createdAt": "2023-12-01T09:00:00Z",
+            "updatedAt": "2024-01-15T12:00:00Z",
+            "author": null,
+            "labels": { "nodes": [] },
+            "isDraft": false,
+            "mergedAt": null,
+            "commits": { "nodes": [{ "commit": { "statusCheckRollup": null } }] }
+          }
+        ]
+      }
+    }
+  }
+}
