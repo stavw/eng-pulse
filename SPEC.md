@@ -47,7 +47,8 @@ Private repos · multiple repos per run · lines changed · SonarQube or other e
 - A PR with failing checks goes in Stuck, however recently it was updated; Stuck takes priority over In progress.
 - Open PRs without failing checks, last updated at least 3 but under 7 days ago, are left out: they fit no bucket.
 - Draft PRs are left out of every section.
-- Stuck shows the top 15 items plus the total count.
+- Stuck shows the top 15 items, most recently updated first, plus the total count.
+- Bots are identified by GitHub's account type: `copilot-swe-agent` is excluded, `nbk-bot` (a user account) is kept.
 - Pending checks don't count as failing.
 - Issues already closed are left out of Risks.
 - No retries: a failed GitHub call stops the run with a clear message and a non-zero exit.
