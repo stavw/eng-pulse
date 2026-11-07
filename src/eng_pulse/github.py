@@ -54,7 +54,7 @@ _MERGED_PRS_QUERY = _page_query(
 )
 _ISSUES_QUERY = _page_query(
     "issues",
-    "orderBy: {field: CREATED_AT, direction: DESC}",
+    "states: OPEN, orderBy: {field: CREATED_AT, direction: DESC}",
     _ITEM_FIELDS,
 )
 
@@ -183,7 +183,7 @@ def fetch_merged_prs(repo: str, since: datetime) -> list[PullRequest]:
 
 
 def fetch_issues(repo: str, since: datetime) -> list[Issue]:
-    """Fetch issues created at or after `since`."""
+    """Fetch open issues created at or after `since`."""
     issues = map(_to_issue, _nodes_until(repo, _ISSUES_QUERY, "createdAt", since))
     return [issue for issue in issues if issue.created_at >= since]
 
