@@ -96,7 +96,7 @@ Generated: 2026-01-15 12:00 UTC
 
 ## Shipped
 
-- [#201 Fix login redirect](https://github.com/acme/widgets/pull/201) · @bob · 3d
+- [#201 Fix login redirect](https://github.com/acme/widgets/pull/201) · @bob · 5d · merged 2d ago
 
 ## In progress
 
@@ -204,10 +204,26 @@ def test_item_created_at_now_is_under_an_hour_old():
     assert _age_shown(_pr(created_at=NOW)) == "<1h"
 
 
-def test_merged_pr_age_stops_at_the_merge():
-    pr = _pr(created_at=NOW - timedelta(days=30), merged_at=NOW - timedelta(days=28))
+def test_recency_uses_the_same_format_as_age():
+    cases = {timedelta(minutes=30): "merged <1h ago", timedelta(hours=5): "merged 5h ago"}
+    for since_merge, expected in cases.items():
+        pr = _pr(created_at=NOW - timedelta(days=3), merged_at=NOW - since_merge)
 
-    assert _age_shown(pr) == "2d"
+        line = next(line for line in _digest(_buckets(shipped=[pr])).splitlines() if line.startswith("- "))
+
+        assert line.endswith(f" · 3d · {expected}")
+
+
+def test_shipped_line_shows_age_since_opened_and_recency_since_merge():
+    pr = _pr(201, created_at=NOW - timedelta(days=5), merged_at=NOW - timedelta(days=2))
+
+    digest = _digest(_buckets(shipped=[pr]))
+
+    line = next(line for line in digest.splitlines() if line.startswith("- [#201 "))
+    fields = line.split(" · ")
+    assert fields[1] == "@alice"
+    assert fields[2] == "5d"
+    assert len(fields) == 4 and "2d" in fields[3]
 
 
 def test_open_pr_and_issue_age_run_to_now():

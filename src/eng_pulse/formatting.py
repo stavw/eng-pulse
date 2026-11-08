@@ -18,15 +18,13 @@ def _format_age(age: timedelta) -> str:
     return f"{age.days}d"
 
 
-def _age(item: Issue, now: datetime) -> timedelta:
-    """Time since creation, stopping at the merge for a merged PR."""
-    end = item.merged_at if isinstance(item, PullRequest) and item.merged_at else now
-    return end - item.created_at
-
-
 def _item_line(item: Issue, now: datetime) -> str:
-    age = _format_age(_age(item, now))
-    return f"- [#{item.number} {item.title}]({item.url}) · @{item.author} · {age}"
+    """Age is time since opening; a merged PR also shows recency, the time since merge."""
+    age = _format_age(now - item.created_at)
+    line = f"- [#{item.number} {item.title}]({item.url}) · @{item.author} · {age}"
+    if isinstance(item, PullRequest) and item.merged_at:
+        line += f" · merged {_format_age(now - item.merged_at)} ago"
+    return line
 
 
 def _section(title: str, items: Sequence[Issue], now: datetime, limit: int | None = None) -> str:
