@@ -16,12 +16,12 @@ An engineering manager who reads the digest at the start of the week, decides on
 Markdown printed to the terminal:
 
 1. Header — repo, date range, generated-at time
-2. **Summary** — 3 sentences + top 3 risks (AI-generated, Day 6)
+2. **Summary** — 3 sentences + top 3 risks (AI-generated, Sprint 6)
 3. **Shipped** — PRs merged in the window
 4. **In progress** — open PRs updated in the last 3 days
-5. **Stuck** — open PRs with no update for 7+ days, or failing checks; each shows its reason; top 15 shown, plus the total count
+5. **Stuck** — open PRs with no update for 7–90 days, or failing checks, leaving out abandoned PRs (90+ days); each shows its reason; top 15 shown, plus the total count
 6. **Risks** — issues still open whose label name contains `bug` or `regression` (case-insensitive), opened in the window
-7. Footer — item counts per section; API cost of the run
+7. Footer — item counts per section, plus the abandoned PR count; API cost of the run
 
 Each item: title, author, age, link to the PR or issue.
 Bot authors (dependabot, renovate, any `[bot]` account) are excluded.
@@ -51,6 +51,7 @@ Private repos · multiple repos per run · lines changed · SonarQube or other e
 - Age is time since the PR or issue was opened; shown as `<1h`, whole hours, or whole days from 24 hours.
 - Recency is time since merge; shown as `<1h`, whole hours, or whole days from 24 hours.
 - Each Stuck item ends with its reason: `failing checks, idle 5h` for a PR with failing checks, however recently it was updated, or `idle 12d` for one with no update for 7+ days. Idle is time since the last update, shown like age.
+- Open PRs with no update for 90+ days are "abandoned", even with failing checks: left out of Stuck and its total, and shown only as a count in the footer.
 - Bots are identified by GitHub's account type: `copilot-swe-agent` is excluded, `nbk-bot` (a user account) is kept.
 - Pending checks don't count as failing.
 - Issues already closed are left out of Risks.
