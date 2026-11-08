@@ -1,9 +1,9 @@
 """Renders the digest as Markdown. Pure: no printing, no clock. Callers pass `now`."""
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import datetime, timedelta
 
-from eng_pulse.categorize import Buckets
+from eng_pulse.categorize import Buckets, has_failing_checks
 from eng_pulse.github import Issue, PullRequest
 
 _STUCK_LIMIT = 15
@@ -27,9 +27,22 @@ def _item_line(item: Issue, now: datetime) -> str:
     return line
 
 
-def _section(title: str, items: Sequence[Issue], now: datetime, limit: int | None = None) -> str:
+def _stuck_line(pr: PullRequest, now: datetime) -> str:
+    """The item line plus why it's stuck. Idle is time since the last update."""
+    idle = f"idle {_format_age(now - pr.updated_at)}"
+    reason = f"failing checks, {idle}" if has_failing_checks(pr) else idle
+    return f"{_item_line(pr, now)} · {reason}"
+
+
+def _section[T: Issue](
+    title: str,
+    items: Sequence[T],
+    now: datetime,
+    limit: int | None = None,
+    line: Callable[[T, datetime], str] = _item_line,
+) -> str:
     shown = items[:limit]
-    lines = [_item_line(item, now) for item in shown]
+    lines = [line(item, now) for item in shown]
     if len(items) > len(shown):
         lines.append(f"…and {len(items) - len(shown)} more")
     body = "\n".join(lines) or "None"
@@ -57,7 +70,7 @@ def format_digest(repo: str, days: int, buckets: Buckets, now: datetime) -> str:
         _header(repo, days, now),
         _section("Shipped", buckets.shipped, now),
         _section("In progress", buckets.in_progress, now),
-        _section("Stuck", buckets.stuck, now, limit=_STUCK_LIMIT),
+        _section("Stuck", buckets.stuck, now, limit=_STUCK_LIMIT, line=_stuck_line),
         _section("Risks", buckets.risks, now),
         "---",
         _footer(buckets),

@@ -25,7 +25,7 @@ def _is_eligible(pr: PullRequest) -> bool:
     return not pr.author_is_bot and not pr.is_draft
 
 
-def _has_failing_checks(pr: PullRequest) -> bool:
+def has_failing_checks(pr: PullRequest) -> bool:
     """Pending or missing checks don't count as failing."""
     return pr.check_state in _FAILING_CHECK_STATES
 
@@ -46,7 +46,7 @@ def in_progress(open_prs: list[PullRequest], now: datetime) -> list[PullRequest]
         pr
         for pr in open_prs
         if _is_eligible(pr)
-        and not _has_failing_checks(pr)
+        and not has_failing_checks(pr)
         and now - pr.updated_at < _IN_PROGRESS_WINDOW
     ]
 
@@ -60,7 +60,7 @@ def stuck(open_prs: list[PullRequest], now: datetime) -> list[PullRequest]:
         pr
         for pr in open_prs
         if _is_eligible(pr)
-        and (_has_failing_checks(pr) or now - pr.updated_at >= _STUCK_AFTER)
+        and (has_failing_checks(pr) or now - pr.updated_at >= _STUCK_AFTER)
     ]
     return sorted(matches, key=lambda pr: pr.updated_at, reverse=True)
 

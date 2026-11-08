@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 from eng_pulse.categorize import Buckets
@@ -104,7 +105,7 @@ Generated: 2026-01-15 12:00 UTC
 
 ## Stuck
 
-- [#90 Abandoned refactor](https://github.com/acme/widgets/pull/90) · @carol · 12d
+- [#90 Abandoned refactor](https://github.com/acme/widgets/pull/90) · @carol · 12d · idle 12d
 
 ## Risks
 
@@ -179,6 +180,25 @@ def test_stuck_keeps_the_order_it_is_given():
     assert numbers == ["[#3", "[#1", "[#2"]
 
 
+def test_stuck_lines_end_with_the_reason():
+    opened = NOW - timedelta(days=30)
+    failing_recent = replace(
+        _pr(1, created_at=opened), updated_at=NOW - timedelta(hours=5), check_state="FAILURE"
+    )
+    idle = replace(_pr(2, created_at=opened), updated_at=NOW - timedelta(days=12))
+    failing_and_idle = replace(
+        _pr(3, created_at=opened), updated_at=NOW - timedelta(days=9), check_state="ERROR"
+    )
+
+    digest = _digest(_buckets(stuck=[failing_recent, idle, failing_and_idle]))
+
+    assert [line for line in digest.splitlines() if line.startswith("- ")] == [
+        "- [#1 PR 1](https://github.com/acme/widgets/pull/1) · @alice · 30d · failing checks, idle 5h",
+        "- [#2 PR 2](https://github.com/acme/widgets/pull/2) · @alice · 30d · idle 12d",
+        "- [#3 PR 3](https://github.com/acme/widgets/pull/3) · @alice · 30d · failing checks, idle 9d",
+    ]
+
+
 def test_other_sections_are_not_limited():
     prs = [_pr(n) for n in range(1, 21)]
 
@@ -232,7 +252,7 @@ def test_open_pr_and_issue_age_run_to_now():
     digest = _digest(_buckets(stuck=[_pr(1, created_at=created)], risks=[_issue(2, created_at=created)]))
 
     item_lines = [line for line in digest.splitlines() if line.startswith("- ")]
-    assert [line.rsplit(" · ", 1)[1] for line in item_lines] == ["30d", "30d"]
+    assert [line.split(" · ")[2] for line in item_lines] == ["30d", "30d"]
 
 
 def test_title_with_brackets_is_printed_unchanged():
