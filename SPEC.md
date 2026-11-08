@@ -19,7 +19,7 @@ Markdown printed to the terminal:
 2. **Summary** — 3 sentences + top 3 risks (AI-generated, Day 6)
 3. **Shipped** — PRs merged in the window
 4. **In progress** — open PRs updated in the last 3 days
-5. **Stuck** — open PRs with no update for 7+ days, or failing checks; top 15 shown, plus the total count
+5. **Stuck** — open PRs with no update for 7+ days, or failing checks; each shows its reason; top 15 shown, plus the total count
 6. **Risks** — issues still open whose label name contains `bug` or `regression` (case-insensitive), opened in the window
 7. Footer — item counts per section; API cost of the run
 
@@ -48,8 +48,9 @@ Private repos · multiple repos per run · lines changed · SonarQube or other e
 - Open PRs without failing checks, last updated at least 3 but under 7 days ago, are left out: they fit no bucket.
 - Draft PRs are left out of every section.
 - Stuck shows the top 15 items, most recently updated first, plus the total count.
-- Age is time since creation, stopping at the merge for Shipped; shown as `<1h`, whole hours, or whole days from 24 hours.
+- Age is time since the PR or issue was opened; shown as `<1h`, whole hours, or whole days from 24 hours.
 - Recency is time since merge; shown as `<1h`, whole hours, or whole days from 24 hours.
+- Each Stuck item ends with its reason: `failing checks, idle 5h` for a PR with failing checks, however recently it was updated, or `idle 12d` for one with no update for 7+ days. Idle is time since the last update, shown like age.
 - Bots are identified by GitHub's account type: `copilot-swe-agent` is excluded, `nbk-bot` (a user account) is kept.
 - Pending checks don't count as failing.
 - Issues already closed are left out of Risks.
