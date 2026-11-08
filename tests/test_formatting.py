@@ -1,9 +1,9 @@
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
-from eng_pulse.categorize import Buckets
+from eng_pulse.categorize import Buckets, categorize
 from eng_pulse.formatting import format_digest
-from eng_pulse.github import Issue, PullRequest
+from eng_pulse.github import Issue, PullRequest, RepoData
 
 NOW = datetime(2026, 1, 15, 12, 0, tzinfo=UTC)
 REPO = "acme/widgets"
@@ -113,7 +113,7 @@ Generated: 2026-01-15 12:00 UTC
 
 ---
 
-Shipped: 1 · In progress: 1 · Stuck: 1 · Risks: 1"""
+Shipped: 1 · In progress: 1 · Stuck: 1 · Risks: 1 · Abandoned: 0"""
 
 
 def test_empty_sections_show_none_and_zero_counts():
@@ -141,7 +141,7 @@ None
 
 ---
 
-Shipped: 0 · In progress: 0 · Stuck: 0 · Risks: 0"""
+Shipped: 0 · In progress: 0 · Stuck: 0 · Risks: 0 · Abandoned: 0"""
 
 
 def _stuck_lines(count: int) -> list[str]:
@@ -171,7 +171,7 @@ def test_stuck_with_18_items_shows_the_first_15_and_counts_all_in_the_footer():
     assert lines[14].startswith("- [#15 ")
     assert lines[15] == "…and 3 more"
     digest = _digest(_buckets(stuck=[_pr(n) for n in range(1, 19)]))
-    assert digest.endswith("Stuck: 18 · Risks: 0")
+    assert digest.endswith("Stuck: 18 · Risks: 0 · Abandoned: 0")
 
 
 def test_stuck_keeps_the_order_it_is_given():
@@ -197,6 +197,29 @@ def test_stuck_lines_end_with_the_reason():
         "- [#2 PR 2](https://github.com/acme/widgets/pull/2) · @alice · 30d · idle 12d",
         "- [#3 PR 3](https://github.com/acme/widgets/pull/3) · @alice · 30d · failing checks, idle 9d",
     ]
+
+
+def test_abandoned_prs_are_counted_in_the_footer_and_left_out_of_stuck():
+    opened = NOW - timedelta(days=300)
+    exactly_90 = replace(_pr(1, created_at=opened), updated_at=NOW - timedelta(days=90))
+    failing_200 = replace(
+        _pr(2, created_at=opened), updated_at=NOW - timedelta(days=200), check_state="FAILURE"
+    )
+    just_under_90 = replace(
+        _pr(3, created_at=opened), updated_at=NOW - timedelta(days=90) + timedelta(seconds=1)
+    )
+    bot_100 = replace(_pr(4, created_at=opened), updated_at=NOW - timedelta(days=100), author_is_bot=True)
+    draft_100 = replace(_pr(5, created_at=opened), updated_at=NOW - timedelta(days=100), is_draft=True)
+    data = RepoData(
+        open_prs=[exactly_90, failing_200, just_under_90, bot_100, draft_100], merged_prs=[], issues=[]
+    )
+
+    digest = format_digest(REPO, 7, categorize(data, days=7, now=NOW), NOW)
+
+    assert [line for line in digest.splitlines() if line.startswith("- ")] == [
+        "- [#3 PR 3](https://github.com/acme/widgets/pull/3) · @alice · 300d · idle 89d",
+    ]
+    assert digest.splitlines()[-1] == "Shipped: 0 · In progress: 0 · Stuck: 1 · Risks: 0 · Abandoned: 2"
 
 
 def test_other_sections_are_not_limited():
