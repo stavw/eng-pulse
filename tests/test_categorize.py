@@ -179,7 +179,7 @@ def test_stuck_returns_every_match_so_the_total_count_stays_available():
 
 
 def test_stuck_sorts_most_recently_updated_first():
-    oldest = _pr(1, updated_at=NOW - timedelta(days=90))
+    oldest = _pr(1, updated_at=NOW - timedelta(days=60))
     newest = _pr(2, updated_at=NOW - timedelta(hours=1), check_state="FAILURE")
     middle = _pr(3, updated_at=NOW - timedelta(days=8))
 

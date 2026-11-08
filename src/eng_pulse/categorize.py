@@ -1,6 +1,6 @@
 """Bucket rules from SPEC.md, as pure functions: no I/O, no clock. Callers pass `now`."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
 from eng_pulse.github import Issue, PullRequest, RepoData
@@ -9,6 +9,7 @@ from eng_pulse.github import Issue, PullRequest, RepoData
 _FAILING_CHECK_STATES = {"FAILURE", "ERROR"}
 _IN_PROGRESS_WINDOW = timedelta(days=3)
 _STUCK_AFTER = timedelta(days=7)
+_ABANDONED_AFTER = timedelta(days=90)
 _RISK_LABEL_TERMS = ("bug", "regression")
 
 
@@ -18,6 +19,7 @@ class Buckets:
     in_progress: list[PullRequest]
     stuck: list[PullRequest]
     risks: list[Issue]
+    abandoned: list[PullRequest] = field(default_factory=list)
 
 
 def _is_eligible(pr: PullRequest) -> bool:
@@ -52,17 +54,24 @@ def in_progress(open_prs: list[PullRequest], now: datetime) -> list[PullRequest]
 
 
 def stuck(open_prs: list[PullRequest], now: datetime) -> list[PullRequest]:
-    """Open PRs with no update for 7+ days or failing checks, most recently updated first.
+    """Open PRs with no update for 7–90 days or failing checks, most recently updated first.
 
-    Returns every match. The top-15 limit is for display, which also needs the total.
+    Abandoned PRs (90+ days) are left out, even with failing checks. Returns every
+    match. The top-15 limit is for display, which also needs the total.
     """
     matches = [
         pr
         for pr in open_prs
         if _is_eligible(pr)
+        and now - pr.updated_at < _ABANDONED_AFTER
         and (has_failing_checks(pr) or now - pr.updated_at >= _STUCK_AFTER)
     ]
     return sorted(matches, key=lambda pr: pr.updated_at, reverse=True)
+
+
+def abandoned(open_prs: list[PullRequest], now: datetime) -> list[PullRequest]:
+    """Open PRs with no update for 90+ days, whatever their checks."""
+    return [pr for pr in open_prs if _is_eligible(pr) and now - pr.updated_at >= _ABANDONED_AFTER]
 
 
 def _has_risk_label(issue: Issue) -> bool:
@@ -87,4 +96,5 @@ def categorize(data: RepoData, days: int, now: datetime) -> Buckets:
         in_progress=in_progress(data.open_prs, now),
         stuck=stuck(data.open_prs, now),
         risks=risks(data.issues, days, now),
+        abandoned=abandoned(data.open_prs, now),
     )

@@ -61,6 +61,7 @@ def _footer(buckets: Buckets) -> str:
     return (
         f"Shipped: {len(buckets.shipped)} · In progress: {len(buckets.in_progress)}"
         f" · Stuck: {len(buckets.stuck)} · Risks: {len(buckets.risks)}"
+        f" · Abandoned: {len(buckets.abandoned)}"
     )
 
 
